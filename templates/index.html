@@ -42,10 +42,10 @@
 
                 function changeFormAction(btn) {
                     if (btn === SUBMIT_BTN) {
-                        IMG_UPLOAD_FORM.action = IMG_RADIO_BTN.checked ? '/submit-image' : '/submit-document'
+                        IMG_UPLOAD_FORM.action = '/submit'
                     }
                     else {
-                        IMG_UPLOAD_FORM.action = IMG_RADIO_BTN.checked ? '/search-image' : '/search-document'
+                        IMG_UPLOAD_FORM.action = '/search'
                     }
                 }
             </script>

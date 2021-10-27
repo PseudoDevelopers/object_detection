@@ -8,9 +8,9 @@
     </ul>
 
     <div id="btns">
-        <input type="button" class="submit-btn" value="Static" onclick="markBoundingBox('static')">
-        <input type="button" class="submit-btn" value="Dynamic" onclick="markBoundingBox('dynamic')">
-        <input type="button" class="submit-btn" value="Unique" onclick="markBoundingBox('unique')">
+        <input type="button" class="submit-btn" value="Static" onclick="markBoundingBox('SBBs')">
+        <input type="button" class="submit-btn" value="Dynamic" onclick="markBoundingBox('DBBs')">
+        <input type="button" class="submit-btn" value="Unique" onclick="markBoundingBox('UBBs')">
         <input type="button" class="submit-btn" value="It's not an text" onclick="markBoundingBox('error')">
     </div>
 
@@ -73,46 +73,50 @@
 
     // Adding bounding boxes to canvas
     function markBoundingBox(option) {
-        addBoundingBoxInArr(nthBoundingBox, option)
+        if (option != 'error')
+            addBBToFinalBBs(nthBB, option)
 
-        CANVAS.remove(boundingBoxRect)
-        boundingBoxRect = undefined
+        CANVAS.remove(BBRect)
+        BBRect = undefined
 
-        nthBoundingBox++
-        if (nthBoundingBox >= BOUNDING_BOXES.length) {
-            finalBoundingBoxesArr = `[${finalBoundingBoxesArr.toString()}]`
-            document.getElementById('form-json-input').value = finalBoundingBoxesArr
+        nthBB++
+        if (nthBB >= BOUNDING_BOXES.length) {
+            document.getElementById('form-json-input').value = JSON.stringify(finalBBs)
             document.getElementById('form').submit()
             return
         }
 
-        showBoundingBoxOnCanvas(nthBoundingBox)
+        showBoundingBoxOnCanvas(nthBB)
+    }
+    function addBBToFinalBBs(ith, type) {
+        finalBBs[type].push(JSON.stringify(BOUNDING_BOXES[ith]))
     }
 
     function showBoundingBoxOnCanvas(ith) {
         bb = BOUNDING_BOXES[ith]
 
-        boundingBoxRect = new fabric.Rect({
-            left: objectsLeftOffset + (bb['topLeft'][0] * objectsScaleFactor),
-            top: objectsTopOffset + (bb['topLeft'][1] * objectsScaleFactor),
-            width: bb['dimensions'][0] * objectsScaleFactor,
-            height: bb['dimensions'][1] * objectsScaleFactor,
+        BBRect = new fabric.Rect({
+            left: objectsLeftOffset + (bb['pos'][0] * objectsScaleFactor),
+            top: objectsTopOffset + (bb['pos'][1] * objectsScaleFactor),
+            width: bb['size'][0] * objectsScaleFactor,
+            height: bb['size'][1] * objectsScaleFactor,
 
             fill: 'transparent',
             stroke: 'red',
             strokeWidth: 2,
         })
-        CANVAS.add(boundingBoxRect)
-    }
-    function addBoundingBoxInArr(ith, type) {
-        BOUNDING_BOXES[ith]['bounding_box_type'] = type
-        finalBoundingBoxesArr.push(JSON.stringify(BOUNDING_BOXES[ith]))
+        CANVAS.add(BBRect)
     }
 
-    let boundingBoxRect
-    let finalBoundingBoxesArr = []
-    let nthBoundingBox = 0
+    let BBRect
+    let nthBB = 0
+    let finalBBs = {
+        'SBBs': [],
+        'DBBs': [],
+        'UBBs': []
+    }
+
     setTimeout(() => {
-        showBoundingBoxOnCanvas(nthBoundingBox)
+        showBoundingBoxOnCanvas(nthBB)
     }, 1000)
 </script>

@@ -1,32 +1,25 @@
 from pymongo import MongoClient
 
+from config import MONGO
 
-client = MongoClient('mongodb://localhost:27017')
-db = client['object_detection']
-
-object_collection = db['object_detection']
-document_collection = db['document_detection']
+from logger import log
+_LOGGER = log(__name__)
 
 
-def insert_graphical_img_data(data):
-    object_collection.update_one({'_id': 1}, {'$push': data}, upsert=True)
 
-def insert_document_data(data):
-    document_collection.update_one({'_id': 1}, {'$push': data}, upsert=True)
+client = MongoClient(MONGO['dbUrl'])
+
+DB = client[MONGO['client']]
+COLLECTION = DB[MONGO['collection']]
 
 
-def read_objs_data(query):
-    document = object_collection.find_one({'_id': 1}, query)
-    if document is None:
-        return None
+def insert_to_db(data):
+    COLLECTION.update_one({'_id': 1}, {'$push': data}, upsert=True)
+    _LOGGER.info('Data saved to DB')
 
-    document.pop('_id', None)
-    return document
 
-def read_documents_data(query):
-    document = document_collection.find_one({ '_id': 1 }, query)
-    if document is None:
-        return None
+def read_from_db(query, filterFields):
+    document = COLLECTION.find_one(query, filterFields)
 
-    document.pop('_id', None)
+    _LOGGER.info('Data has been read from DB')
     return document

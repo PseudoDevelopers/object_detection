@@ -6,15 +6,24 @@ This module actually detect & process the object from image.
 import cv2
 import numpy as np
 
+from config import OPEN_CV_MIN_THRESHOLD
 
-net = cv2.dnn.readNet('detector/object_detector/yolov3-spp.weights',
-                      'detector/object_detector/yolov3-spp.cfg')
-
-layerNames = net.getLayerNames()
-outputLayers = [layerNames[i[0]-1]for i in net.getUnconnectedOutLayers()]
+from logger import log
+_LOGGER = log(__name__)
 
 
 def detect_objects(img):
+    height, width, _ = img.shape
+    
+    detectedObjs = object_detector(img)
+    processedObjs = process_objects(detectedObjs, width, height)
+    removedDuplicatedObjs = remove_duplicated_objects(processedObjs)
+
+    _LOGGER.info('Object detection is complete')
+    return removedDuplicatedObjs
+
+
+def object_detector(img):
     blob = cv2.dnn.blobFromImage(img, 0.00392, (416, 416), (0, 0, 0), True, crop=False)
     height, width, channels = img.shape
 
@@ -26,57 +35,60 @@ def detect_objects(img):
     net.setInput(blob)
     outs = net.forward(outputLayers)
 
-    processed_objs = process_objects(outs, width, height)
-    removed_duplicated_objs = remove_duplicated_objects(processed_objs)
-
-    return removed_duplicated_objs
+    return outs
 
 
-def process_objects(objects, width, height):
-    detectedObjects = []
-    for obj in objects:
+def process_objects(objs, width, height):
+    processedObjs = []
+    for obj in objs:
         for detection in obj:
             scores = detection[5:]
             classId = np.argmax(scores).item()
             confidence = scores[classId]
 
-            # TODO: have to add here constent value for confidence
-            if confidence > 0.5:
+            if confidence > OPEN_CV_MIN_THRESHOLD:
                 centerX = int(detection[0]*width)
                 centerY = int(detection[1]*height)
                 w = int(detection[2]*width)
                 h = int(detection[3]*height)
-                topLeft = (int(centerX-w/2), int(centerY-h/2))
+                pos = (int(centerX-w/2), int(centerY-h/2))
 
-                detectedObjects.append({
+                processedObjs.append({
                     'center': (centerX, centerY),
-                    'dimentions': (w, h),
-                    'topLeft': topLeft,
+                    'size': (w, h),
+                    'pos': pos,
                     'confidence': float(confidence),
                     'classId': classId
                 })
 
-    return detectedObjects
+    return processedObjs
 
 
-def remove_duplicated_objects(objects):
+def remove_duplicated_objects(objs):
     boxes = []
     classIds = []
     confidences = []
-    for obj in objects:
+    for obj in objs:
         boxes.append([
-            int(obj['center'][0]-obj['dimentions'][0]/2),
-            int(obj['center'][1]-obj['dimentions'][1]/2),
-            obj['dimentions'][0],
-            obj['dimentions'][1]
+            int(obj['center'][0]-obj['size'][0]/2),
+            int(obj['center'][1]-obj['size'][1]/2),
+            obj['size'][0],
+            obj['size'][1]
         ])
         classIds.append(obj['classId'])
         confidences.append(obj['confidence'])
 
     indexes = cv2.dnn.NMSBoxes(boxes, confidences, 0.5, 0.4)
-    remainingObjects = [obj for i, obj in enumerate(objects) if i in indexes]
+    remainingObjects = [obj for i, obj in enumerate(objs) if i in indexes]
 
     return remainingObjects
+
+
+net = cv2.dnn.readNet('detector/object_detector/yolov3-spp.weights',
+                      'detector/object_detector/yolov3-spp.cfg')
+
+layerNames = net.getLayerNames()
+outputLayers = [layerNames[i[0]-1]for i in net.getUnconnectedOutLayers()]
 
 
 if __name__ == '__main__':
