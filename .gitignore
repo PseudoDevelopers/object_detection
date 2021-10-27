@@ -6,9 +6,9 @@ asdf
 yolov3-spp.weights
 
 
-/images/test images/*
 /images/indexed/*
-/static/images/client/*
+/images/client/*
+/images/test images/*
 test/*
 
 !/**/.gitkeep

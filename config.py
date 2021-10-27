@@ -8,7 +8,7 @@ This file contains some of the most commonly used constants in the project.
 GLOBAL_DEBUG = True
 
 
-UPLOADED_IMGS_DIR = 'static/images/client/'
+UPLOADED_IMGS_DIR = 'images/client/'
 INDEXED_IMGS_DIR = 'images/indexed/'
 
 

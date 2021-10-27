@@ -27,7 +27,8 @@
 
 <!-- Printing bounding boxes & image path -->
 <{{ 'script' }}>
-    const IMG_PATH = '{{ img['path'] }}/{{ img['name'] }}'
+    
+    const IMG_PATH = 'uploaded/{{ url_for('get_uploaded_img', filename=img['name']) }}'
     const BOUNDING_BOXES = {{ bounding_boxes | safe }}
 </{{ 'script' }}>
 

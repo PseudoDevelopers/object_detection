@@ -7,7 +7,7 @@ import os
 
 # TODO: This is not working
 # from config import MONGO, UPLOADED_IMGS_DIR, INDEXED_IMGS_DIR
-UPLOADED_IMGS_DIR = 'static/images/client/'
+UPLOADED_IMGS_DIR = 'images/client/'
 INDEXED_IMGS_DIR = 'images/indexed/'
 
 MONGO = {

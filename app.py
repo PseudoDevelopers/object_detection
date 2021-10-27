@@ -81,6 +81,8 @@ def search_img(imgName):
 @app.route('/bbs-submit', methods=['POST'])
 @validate_bounding_boxes_selector_form
 def save_template(imgName, graphicalObjs, BBs):
+    move_file(UPLOADED_IMGS_DIR+imgName, INDEXED_IMGS_DIR+imgName)
+    
     _LOGGER.info('BBs recieved')
     indexed = process_and_index(graphicalObjs, BBs, imgName)
     insert_to_db(indexed)
@@ -93,7 +95,12 @@ def send_respose(template, *args, **kwargs):
     return render_template('index.html', template=template, *args, **kwargs)
 
 
-@app.route('/<path:filename>')
+@app.route('/uploaded/<path:filename>')
+def get_uploaded_img(filename):
+    return send_from_directory(UPLOADED_IMGS_DIR, filename, as_attachment=True)
+
+
+@app.route('/indexed/<path:filename>')
 def get_indexed_img(filename):
     return send_from_directory(INDEXED_IMGS_DIR, filename, as_attachment=True)
 
