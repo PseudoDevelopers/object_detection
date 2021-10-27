@@ -40,7 +40,7 @@ def submit_img(imgName):
         return redirect('/')
 
     return send_respose(
-        template='document-bounding-boxes-selector',
+        template='bbs-selector',
         img={ 'name': imgName, 'path': UPLOADED_IMGS_DIR },
         bounding_boxes=json.dumps(textualObjs),
         objs=json.dumps(graphicalObjs)
