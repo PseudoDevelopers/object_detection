@@ -10,7 +10,7 @@ import numpy as np
 
 # This function marks detected obecjs & texts
 # And show in a window
-def show(img, objects=None, texts=None):
+def show_img(img, objects=None, texts=None):
     if objects is not None:
         mark_objects(img, objects)
     if texts is not None:

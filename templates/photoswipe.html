@@ -1,6 +1,8 @@
-{% for imgUrl in imgs %}
-    <a class="fancybox" href="{{ imgUrl }}" title="" alt="">
-        <img src="{{ imgUrl }}" border="0" class="thumb" />
+{% for imgName in imgs %}
+    {% set url = url_for('get_indexed_img', filename=imgName) %}
+
+    <a class="fancybox" href="{{ url }}" title="" alt="">
+        <img src="{{ url }}" border="0" class="thumb" />
     </a>
 {% endfor %}
 

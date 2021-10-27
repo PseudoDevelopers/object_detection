@@ -3,7 +3,9 @@ from DB import read_from_db
 
 def search_from_db(dataForSearch):
     result = read_from_db(dataForSearch['query'], dataForSearch['filterFields'])
-
+    if result == None:
+        return []
+    
     imgs = dataForSearch['retriveData'](result)
     if imgs == None:
         return []

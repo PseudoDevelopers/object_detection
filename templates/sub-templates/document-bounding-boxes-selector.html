@@ -14,7 +14,7 @@
         <input type="button" class="submit-btn" value="It's not an text" onclick="markBoundingBox('error')">
     </div>
 
-    <form id="form" method="POST" action="/document-bounding-boxes-selector">
+    <form id="form" method="POST" action="/bbs-submit">
         <input type="hidden" name="img-name" value='{{ img["name"] | safe }}'>
         <input id="form-objs-input" type="hidden" name="objects-data" value="{{ objs }}">
         <input id="form-json-input" name="bounding-boxes-data" type="hidden" value="">
