@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<config>
+    <source_groups>
+        <source_group_04fd1172-933a-4f80-8793-354f68ee6909>
+            <exclude_filters>
+                <exclude_filter>__pycache__</exclude_filter>
+                <exclude_filter>.gitignore</exclude_filter>
+                <exclude_filter>README.md</exclude_filter>
+                <exclude_filter>requirements-conda.yml</exclude_filter>
+                <exclude_filter>requirements-pip.txt</exclude_filter>
+                <exclude_filter>.git</exclude_filter>
+                <exclude_filter>.vscode</exclude_filter>
+                <exclude_filter>else</exclude_filter>
+                <exclude_filter>scripts</exclude_filter>
+                <exclude_filter>templates</exclude_filter>
+                <exclude_filter>test</exclude_filter>
+                <exclude_filter>images</exclude_filter>
+                <exclude_filter>static</exclude_filter>
+            </exclude_filters>
+            <name>Python Source Group</name>
+            <python_environment_path>C:/Users/DELL/.conda/envs/image-based-search-engine</python_environment_path>
+            <source_extensions>
+                <source_extension>.py</source_extension>
+            </source_extensions>
+            <source_paths>
+                <source_path>logger</source_path>
+                <source_path>object_detector</source_path>
+                <source_path>app.py</source_path>
+                <source_path>config.py</source_path>
+                <source_path>validation.py</source_path>
+                <source_path>DB</source_path>
+                <source_path>detector</source_path>
+                <source_path>indexing</source_path>
+            </source_paths>
+            <status>enabled</status>
+            <type>Python Source Group</type>
+        </source_group_04fd1172-933a-4f80-8793-354f68ee6909>
+    </source_groups>
+    <version>8</version>
+</config>
