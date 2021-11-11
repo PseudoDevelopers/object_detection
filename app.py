@@ -1,16 +1,20 @@
-from os import rename as move_file
-from flask import Flask, render_template, redirect
+from os import rename as move_file, remove as del_file
 import json
+
+from flask import Flask, render_template, redirect, send_from_directory
 
 # Local imports
 from config import *
-from detector import detect_objs, document_detertor, index_document_data, index_bounding_boxes
-from DB import insert_graphical_img_data, insert_document_data
-from DB.search import search_objs as search_objs_in_db, search_documents as search_documents_in_db
+from logger import log
+from detector import detect_objs_and_text
+from indexing import process_and_index, process_and_index_for_submit_search
+from DB import insert_to_db
+from DB.search import search_from_db
 from validation import validate_submit_search_form, validate_bounding_boxes_selector_form
 
 
 app = Flask(__name__)
+_LOGGER = log(__name__)
 
 
 # Index page
@@ -19,92 +23,71 @@ def index():
     return send_respose('default')
 
 
-# When user only submits a image
-@app.route('/submit-image', methods=['POST'])
+# Submitting an image
+@app.route('/submit', methods=['POST'])
 @validate_submit_search_form
-def submit_img(img_name):
-    objs, _ = detect_objs(img_name)
+def submit_img(imgName):
+    graphicalObjs, textualObjs = detect_objs_and_text(imgName)
 
-    if objs is None:
-        # TODO: Image should be Deleted
+    if len(graphicalObjs) == 0 and len(textualObjs) == 0:
+        del_file(f'{UPLOADED_IMGS_DIR}/{imgName}')
         return redirect('/')
 
-    move_file(UPLOADED_IMGS_DIR+img_name, INDEXED_IMGS_DIR+img_name)
-    insert_graphical_img_data(objs)
-
-    return redirect('/')
-
-
-# Document user only submit a document
-@app.route('/submit-document', methods=['POST'])
-@validate_submit_search_form
-def submit_document(img_name):
-    objs, bbs = document_detertor(img_name)
-
-    if bbs is None:
-        return send_respose('no-bb-or-objs')
-
-    move_file(UPLOADED_IMGS_DIR+img_name, INDEXED_IMGS_DIR+img_name)
+    elif len(textualObjs) == 0:
+        move_file(UPLOADED_IMGS_DIR+imgName, INDEXED_IMGS_DIR+imgName)
+        indexed = process_and_index(graphicalObjs, {'SBBs': [], 'DBBs': [], 'DBBs': []}, imgName)
+        insert_to_db(indexed)
+        return redirect('/')
 
     return send_respose(
-        template='document-bounding-boxes-selector',
-        img={ 'name': img_name, 'path': INDEXED_IMGS_DIR },
-        bounding_boxes=json.dumps(bbs),
-        objs=json.dumps(objs)
+        template='bbs-selector',
+        img={ 'name': imgName, 'path': UPLOADED_IMGS_DIR },
+        bounding_boxes=json.dumps(textualObjs),
+        objs=json.dumps(graphicalObjs)
     )
 
 
-# When user search for image
-@app.route('/search-image', methods=['POST'])
+# Searching an image
+@app.route('/search', methods=['POST'])
 @validate_submit_search_form
-def search_img(img_name):
-    objs, objs_for_search = detect_objs(img_name, add_deviation=True)
+def search_img(imgName):
+    graphicalObjs, textualObjs = detect_objs_and_text(imgName)
 
-    if objs is None:
-        # TODO: The image should be deleted
+    if len(graphicalObjs) == 0 and len(textualObjs) == 0:
+        del_file(f'{UPLOADED_IMGS_DIR}/{imgName}')
         return send_respose('no_img_found')
 
-    imgs = search_objs_in_db(objs_for_search)
-    move_file(UPLOADED_IMGS_DIR+img_name, INDEXED_IMGS_DIR+img_name)
-    insert_graphical_img_data(objs)
+    move_file(UPLOADED_IMGS_DIR+imgName, INDEXED_IMGS_DIR+imgName)
 
-    if imgs is None:
+    BBs = {'SBBs': textualObjs, 'DBBs': [], 'UBBs': []}
+    indexedForSubmit, dataForSearch = process_and_index_for_submit_search(
+        graphicalObjs, BBs, imgName)
+
+    imgs = search_from_db(dataForSearch)
+
+    insert_to_db(indexedForSubmit)
+    _LOGGER.info('Image searching completed\n')
+
+    if len(imgs) == 0:
         return send_respose('no_img_found')
 
-    imgs = [INDEXED_IMGS_DIR+img for img in imgs]
-    return send_respose('gallary', imgs=imgs)
-
-
-# When user request to verify document
-@app.route('/search-document', methods=['POST'])
-@validate_submit_search_form
-def search_document(img_name):
-    objs, bbs = document_detertor(img_name)
-
-    if objs is None or bbs is None:
-        # TODO: Case for 0 or 1 objs
-        # TODO: The image should be deleted
-        return send_respose('no_img_found')
-
-    indexed = index_bounding_boxes(objs, True, len(bbs), add_deviation=True)
-    imgs = search_documents_in_db(indexed)
-
-    if imgs is None:
-        return send_respose('no_img_found')
-
-    imgs = [INDEXED_IMGS_DIR+img for img in imgs]
+    # imgs = [INDEXED_IMGS_DIR+img for img in imgs]
     return send_respose('gallary', imgs=imgs)
 
 
 # When user submit document template
 # Then server send the bounding boxes to client to select types of bounding boxes
 # This route used only when user submits types of bounding boxes
-@app.route('/document-bounding-boxes-selector', methods=['POST'])
+@app.route('/bbs-submit', methods=['POST'])
 @validate_bounding_boxes_selector_form
-def save_template(img_name, objs, bounding_boxes):
-    print(objs, '\n\n\n', bounding_boxes)
-    toDB = index_document_data(img_name, objs, bounding_boxes)
-    insert_document_data(toDB)
+def save_template(imgName, graphicalObjs, BBs):
+    move_file(UPLOADED_IMGS_DIR+imgName, INDEXED_IMGS_DIR+imgName)
+    
+    _LOGGER.info('BBs recieved')
+    indexed = process_and_index(graphicalObjs, BBs, imgName)
+    insert_to_db(indexed)
+    _LOGGER.info('Data inserted to DB')
+
     return redirect('/')
 
 
@@ -112,6 +95,16 @@ def send_respose(template, *args, **kwargs):
     return render_template('index.html', template=template, *args, **kwargs)
 
 
+@app.route('/uploaded/<path:filename>')
+def get_uploaded_img(filename):
+    return send_from_directory(UPLOADED_IMGS_DIR, filename, as_attachment=True)
+
+
+@app.route('/indexed/<path:filename>')
+def get_indexed_img(filename):
+    return send_from_directory(INDEXED_IMGS_DIR, filename, as_attachment=True)
+
+
 if __name__ == '__main__':
     print(f'\n{" "*10}*'*5)
-    app.run()
+    app.run(debug=False)

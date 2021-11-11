@@ -1,51 +1,16 @@
-from os import read
-from nested_lookup import nested_lookup
-
-from DB import read_objs_data, read_documents_data
+from DB import read_from_db
 
 
-def search_objs(objs):
-    query = {key: True for key in objs}
-    matches = read_objs_data(query)
-    if matches is None:
-        return None
+def search_from_db(dataForSearch):
+    result = read_from_db(dataForSearch['query'], dataForSearch['filterFields'])
+    if result == None:
+        return []
+    
+    imgs = dataForSearch['retriveData'](result)
+    if imgs == None:
+        return []
 
-    first_obj = matches.pop('1', None)
-    results = matches
+    # TODO: Match for DBBs
+    imgs = [img['img'] for img in imgs]
 
-    if len(query) == 1 and first_obj is not None:
-        results = first_obj
-
-    imgs = flatten(results)
-    if imgs == []:
-        return None
-
-    without_deplicats = list(dict.fromkeys(imgs))
-    return without_deplicats
-
-
-def search_documents(query):
-    matches = read_documents_data(query)
-    if matches is None:
-        return None
-
-    imgs = flatten(matches)
-
-    if imgs == []:
-        return None
-
-    imgs = nested_lookup('imgName', imgs)
     return imgs
-
-
-def flatten(mydict):
-    values = []
-    for val in mydict.values():
-        if isinstance(val, dict):
-            values += flatten(val)
-        elif isinstance(val, list):
-            values += val
-        else:
-            values.append(val)
-
-    return values

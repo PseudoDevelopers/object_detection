@@ -24,10 +24,10 @@ def validate_submit_search_form(callback):
 
 
 def save_file(img):
-    img_name = str(uuid1())+splitFileName(img.filename)[1]
-    img.save(UPLOADED_IMGS_DIR+img_name)
+    imgName = str(uuid1())+splitFileName(img.filename)[1]
+    img.save(UPLOADED_IMGS_DIR+imgName)
 
-    return img_name
+    return imgName
 
 
 def validate_bounding_boxes_selector_form(callback):
@@ -40,15 +40,15 @@ def validate_bounding_boxes_selector_form(callback):
         elif 'bounding-boxes-data' not in request.form:
             return BAD_REQUEST_STR('No bounding boxes data found.')
 
-        img_name = request.form['img-name']
+        imgName = request.form['img-name']
 
-        objs_data_str = request.form['objects-data'].replace("'", "\'")
-        objs_data = json.loads(objs_data_str)
+        objsDataStr = request.form['objects-data'].replace("'", "\'")
+        objsData = json.loads(objsDataStr)
 
-        bounding_boxes_data_str = request.form['bounding-boxes-data'].replace("'", "\'")
-        bounding_boxes_data = json.loads(bounding_boxes_data_str)
+        BBsStr = request.form['bounding-boxes-data'].replace("'", "\'")
+        BBs = json.loads(BBsStr)
 
-        return callback(img_name, objs_data, bounding_boxes_data, *args, **kwargs)
+        return callback(imgName, objsData, BBs, *args, **kwargs)
     return validate_bounding_boxes_form
 
 
