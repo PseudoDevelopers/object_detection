@@ -107,4 +107,4 @@ def get_indexed_img(filename):
 
 if __name__ == '__main__':
     print(f'\n{" "*10}*'*5)
-    app.run(debug=True)
+    app.run(debug=False)
